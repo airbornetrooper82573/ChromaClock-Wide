@@ -157,20 +157,20 @@ class ChromaClockWidePlugin(BasePlugin):
                         draw.ellipse((x - 1, cy - 1, x + 1, cy + 1), fill=(245, 198, 140))
                 # Mouth animated as a small triangular cut-out.
                 opening = 8 + int(abs(math.sin(tick * 7)) * 35)
-                draw.pieslice((px - 6, cy - 6, px + 6, cy + 6),
+                draw.pieslice((px - 5, cy - 5, px + 5, cy + 5),
                               start=opening, end=360-opening, fill=(255, 222, 24))
                 colors = ((250, 55, 70), (255, 175, 210),
                           (70, 240, 255), (255, 170, 45))
                 for i in range(2):
                     gx = start + 10 + int(tick * (5+i) + i*29 + index*17) % max(1,end-start-20)
-                    gy = 9 if i == 0 else h-9
+                    gy = 6 if i == 0 else h - 6
                     gc = colors[index*2+i]
                     # Rounded ghost head and zigzag fringe.
-                    draw.ellipse((gx-5,gy-5,gx+5,gy+5), fill=gc)
-                    draw.rectangle((gx-5,gy,gx+5,gy+4),fill=gc)
+                    draw.ellipse((gx-4,gy-4,gx+4,gy+3), fill=gc)
+                    draw.rectangle((gx-4,gy,gx+4,gy+3),fill=gc)
                     for z in range(3):
-                        xx=gx-5+z*4
-                        draw.polygon(((xx,gy+4),(xx+2,gy+6),(xx+4,gy+4)), fill=gc)
+                        xx=gx-4+z*3
+                        draw.polygon(((xx,gy+3),(xx+1,gy+4),(xx+3,gy+3)), fill=gc)
                     draw.rectangle((gx-3,gy-1,gx-1,gy+1),fill=(255,255,255))
                     draw.rectangle((gx+1,gy-1,gx+3,gy+1),fill=(255,255,255))
                     draw.point((gx-2,gy),fill=(15,55,220))
