@@ -23,7 +23,23 @@
         "pulse",
         "wave",
         "aurora",
-        "rain"
+        "rain",
+        "flap",
+        "morph",
+        "outline",
+        "words",
+        "dotgrid",
+        "moon",
+        "dayprogress",
+        "world",
+        "pong",
+        "tetris",
+        "aquarium",
+        "snow",
+        "lava",
+        "pacman",
+        "analog",
+        "bighour"
       ]
     },
     "cycle_seconds": {
@@ -53,7 +69,23 @@
         "pulse",
         "wave",
         "aurora",
-        "rain"
+        "rain",
+        "flap",
+        "morph",
+        "outline",
+        "words",
+        "dotgrid",
+        "moon",
+        "dayprogress",
+        "world",
+        "pong",
+        "tetris",
+        "aquarium",
+        "snow",
+        "lava",
+        "pacman",
+        "analog",
+        "bighour"
       ]
     },
     "palette": {
