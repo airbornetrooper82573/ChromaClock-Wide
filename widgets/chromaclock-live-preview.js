@@ -16,7 +16,7 @@
     canvas.setAttribute('aria-label','Live ChromaClock Wide preview');
     const note = document.createElement('p');
     note.style.cssText = 'font-size:12px;opacity:.75;margin-top:5px';
-    note.textContent = 'Follows the Style dropdown immediately (even if physical Preview Mode is enabled). Your physical display changes only after Save. Preview uses browser canvas and approximates the Pillow renderer.';
+    note.textContent = 'With Preview Mode enabled, Preview Style controls this canvas and the physical clock after Save. Otherwise Style controls this canvas. Changes here render before saving. Preview uses browser canvas and approximates the Pillow renderer.';
     const status = document.createElement('p');
     status.style.cssText = 'font-size:12px;opacity:.85;margin-top:4px';
     holder.append(heading,canvas,status,note);
@@ -27,7 +27,7 @@
     const controlsRoot=form || document;
     const find = name => {
       const fields = controlsRoot.querySelectorAll('input[name],select[name]');
-      for(const el of fields) if(el.name === name || el.name.endsWith('.'+name)) return el;
+      for(const el of fields) if(el.name === name || el.name.endsWith('.'+name) || el.id === name || el.id.endsWith('_'+name)) return el;
       return null;
     };
     function read(name, fallback){
@@ -42,8 +42,9 @@
       let style=read('style','cycle');
       const interval=Math.max(5,Number(read('cycle_seconds',20))||20);
       if(style==='cycle')style=STYLES[Math.floor(t/interval)%STYLES.length];
-      // The browser follows the main Style selector; physical Preview Mode is independent.
-      // If Style is Cycle, animate through the available styles.
+      // Preview Mode deliberately pins Preview Style, matching Python display().
+      // Otherwise the browser follows Style, including automatic cycling.
+      if(read('preview_mode',false)) style=read('preview_style','neon');
       if(!STYLES.includes(style))style='neon';
       const palette=read('palette','rainbow');
       const a=COLORS[palette]||color(t*4.8),b=color(t*4.8+100);
@@ -71,14 +72,35 @@
       function circle(x,y,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}
       const sides=[[0,76],[244,320]];
       if(style==='pacman'){
-        for(const [lo,hi] of sides){
-          for(let x=lo+5;x<hi-3;x+=12)circle(x,16,1,'#ffd874');
-          const x=lo+9+((t*9)%(hi-lo-19)), y=16, mouth=.18+.5*Math.abs(Math.sin(t*7));
-          ctx.fillStyle='#ffdb22';ctx.beginPath();ctx.moveTo(x,y);ctx.arc(x,y,6,mouth,2*Math.PI-mouth);ctx.closePath();ctx.fill();
-          const gx=lo+10+((t*5+31)%(hi-lo-19));
-          ctx.fillStyle=lo===0?'#ff537f':'#6ce7ff';
-          ctx.fillRect(gx-4,13,9,8);circle(gx,13,4,ctx.fillStyle);
-          circle(gx-2,15,1,'white');circle(gx+2,15,1,'white');
+        // Mini arcade maze in both side bays; cyan double walls, lit pellets,
+        // animated Pac-Man, four recognizable ghost colors and white eyes.
+        for(let sideIndex=0;sideIndex<sides.length;sideIndex++){
+          const [lo,hi]=sides[sideIndex], width=hi-lo, mid=16;
+          ctx.strokeStyle='#164efb';ctx.lineWidth=2;
+          ctx.strokeRect(lo+1,1,width-3,30);
+          ctx.strokeRect(lo+8,5,18,7);
+          ctx.strokeRect(hi-27,20,18,7);
+          line(lo+33,2,lo+33,10,'#164efb',2);
+          line(hi-34,22,hi-34,30,'#164efb',2);
+          const px=lo+8+((t*12+sideIndex*23)%(width-16));
+          const mouth=.09+.62*Math.abs(Math.sin(t*7));
+          for(let x=lo+6;x<hi-3;x+=8)
+            if(Math.abs(x-px)>7)circle(x,mid,1.15,'#f7c994');
+          ctx.fillStyle='#ffe21c';ctx.beginPath();ctx.moveTo(px,mid);
+          ctx.arc(px,mid,6,mouth,Math.PI*2-mouth,false);ctx.closePath();ctx.fill();
+          for(let i=0;i<2;i++){
+            const gx=lo+10+((t*(5+i)+i*29+sideIndex*17)%(width-20));
+            const gy=i===0?9:23;
+            const gc=['#fa404d','#ffabd5','#4afaff','#ffaf35'][(sideIndex*2+i)%4];
+            ctx.fillStyle=gc;
+            ctx.beginPath();ctx.moveTo(gx-5,gy+5);ctx.lineTo(gx-5,gy);
+            ctx.arc(gx,gy,5,Math.PI,0,false);
+            ctx.lineTo(gx+5,gy+5);
+            for(let z=4;z>=0;z--)ctx.lineTo(gx-5+z*2.5,gy+5+(z%2?0:-2));
+            ctx.closePath();ctx.fill();
+            ctx.fillStyle='#fff';ctx.fillRect(gx-3,gy-1,3,3);ctx.fillRect(gx+1,gy-1,3,3);
+            ctx.fillStyle='#153ddf';ctx.fillRect(gx-2,gy,1,2);ctx.fillRect(gx+2,gy,1,2);
+          }
         }
       }else if(style==='aquarium'){
         line(0,29,320,29,'#257b96');
@@ -166,7 +188,7 @@
   if(window.LEDMatrixWidgets){
     window.LEDMatrixWidgets.register('chromaclock-live-preview',{
       name:'Live ChromaClock Preview',
-      version:'1.1.0',
+      version:'1.2.0',
       render:run,
       getValue:function(){return 'live';},
       setValue:function(){},
