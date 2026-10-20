@@ -16,7 +16,7 @@
     canvas.setAttribute('aria-label','Live ChromaClock Wide preview');
     const note = document.createElement('p');
     note.style.cssText = 'font-size:12px;opacity:.75;margin-top:5px';
-    note.textContent = 'Updates before saving; your physical display changes only after Save. Preview uses browser canvas and approximates the Pillow renderer.';
+    note.textContent = 'Follows the Style dropdown immediately (even if physical Preview Mode is enabled). Your physical display changes only after Save. Preview uses browser canvas and approximates the Pillow renderer.';
     const status = document.createElement('p');
     status.style.cssText = 'font-size:12px;opacity:.85;margin-top:4px';
     holder.append(heading,canvas,status,note);
@@ -24,8 +24,9 @@
     const context=canvas.getContext('2d');
     if (!context) {status.textContent='Canvas unavailable';return;}
     const form=container.closest('form') || container.parentElement;
+    const controlsRoot=form || document;
     const find = name => {
-      const fields = document.querySelectorAll('input[name],select[name]');
+      const fields = controlsRoot.querySelectorAll('input[name],select[name]');
       for(const el of fields) if(el.name === name || el.name.endsWith('.'+name)) return el;
       return null;
     };
@@ -41,7 +42,8 @@
       let style=read('style','cycle');
       const interval=Math.max(5,Number(read('cycle_seconds',20))||20);
       if(style==='cycle')style=STYLES[Math.floor(t/interval)%STYLES.length];
-      if(read('preview_mode',false))style=read('preview_style','neon');
+      // The browser follows the main Style selector; physical Preview Mode is independent.
+      // If Style is Cycle, animate through the available styles.
       if(!STYLES.includes(style))style='neon';
       const palette=read('palette','rainbow');
       const a=COLORS[palette]||color(t*4.8),b=color(t*4.8+100);
@@ -58,11 +60,81 @@
         else if(style==='matrix'||style==='rain'){if(x%7===0)ctx.fillRect(x,Math.floor((t*10+x*13)%38)-5,1,5);}
         else if(style==='fire'||style==='horizon'){ctx.fillRect(x,y,1,h-y);}
         else if(style==='binary'){if(x%8===0)for(let j=0;j<4;j++)if((x+j+Math.floor(t))%3===0)ctx.fillRect(x,3+j*7,3,3);}
-        else if(style==='pacman'){if(x%11===0)ctx.fillRect(x,16,2,2);if(x%47===0){ctx.fillStyle='#ffd41b';ctx.beginPath();ctx.arc(x,16,5,.2,Math.PI*1.8);ctx.lineTo(x,16);ctx.fill();}}else if(style==='aquarium'){if(x%33===0){ctx.fillStyle='#ffad44';ctx.beginPath();ctx.ellipse(x,10+Math.sin(t+x)*7,5,3,0,0,Math.PI*2);ctx.fill();}if(x%19===0)ctx.fillRect(x,28-(Math.floor(t*5+x)%25),2,2);}else if(style==='pong'){if(x%55===0)ctx.fillRect(x,Math.floor(13+Math.sin(t+x)*9),3,4);}else if(style==='tetris'){if(x%13===0)ctx.fillRect(x,Math.floor((t*7+x*3)%32),4,4);}else if(style==='moon'){if(x%59===0){ctx.beginPath();ctx.arc(x,16,9,0,Math.PI*2);ctx.fill();}}else if(style==='snow'){if(x%5===0)ctx.fillRect(x,Math.floor((t*4+x*13)%32),1,1);}else if(style==='lava'){if(x%19===0){ctx.beginPath();ctx.arc(x,15+Math.sin(t+x)*9,4,0,Math.PI*2);ctx.fill();}}else if(style==='analog'||style==='bighour'){if(x%75===0){ctx.beginPath();ctx.arc(x,16,11,0,Math.PI*2);ctx.strokeStyle=a;ctx.stroke();ctx.fillRect(x,8,1,8);}}else if(style==='dayprogress'){if(x%3===0&&x%320<((new Date().getHours()/24)*320))ctx.fillRect(x,16,2,3);}else if(style==='world'||style==='words'){if(x%42===0)ctx.fillRect(x,11,16,2);}else if(style==='dotgrid'){if(x%5===0)ctx.fillRect(x,(x*7)%30,2,2);}else if(style==='flap'||style==='morph'||style==='outline'){if(x%17===0)ctx.strokeRect(x,5,12,22);}else if(style==='pulse')ctx.fillRect(x,Math.min(y,16),1,Math.abs(y-16)+1);
+        else if(style==='pulse')ctx.fillRect(x,Math.min(y,16),1,Math.abs(y-16)+1);
         else if(style==='wave'||style==='aurora')ctx.fillRect(x,y,1,2);
         else if(x%12===0)ctx.fillRect(x,h-2,1,1);
       }
       ctx.globalAlpha=1;
+      // Dedicated scene renderer: each animation is drawn once per frame, not
+      // repeated in the per-pixel background loop.
+      function line(x,y,x2,y2,color,width=1){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x2,y2);ctx.stroke();}
+      function circle(x,y,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}
+      const sides=[[0,76],[244,320]];
+      if(style==='pacman'){
+        for(const [lo,hi] of sides){
+          for(let x=lo+5;x<hi-3;x+=12)circle(x,16,1,'#ffd874');
+          const x=lo+9+((t*9)%(hi-lo-19)), y=16, mouth=.18+.5*Math.abs(Math.sin(t*7));
+          ctx.fillStyle='#ffdb22';ctx.beginPath();ctx.moveTo(x,y);ctx.arc(x,y,6,mouth,2*Math.PI-mouth);ctx.closePath();ctx.fill();
+          const gx=lo+10+((t*5+31)%(hi-lo-19));
+          ctx.fillStyle=lo===0?'#ff537f':'#6ce7ff';
+          ctx.fillRect(gx-4,13,9,8);circle(gx,13,4,ctx.fillStyle);
+          circle(gx-2,15,1,'white');circle(gx+2,15,1,'white');
+        }
+      }else if(style==='aquarium'){
+        line(0,29,320,29,'#257b96');
+        for(const [lo,hi] of sides){
+          for(let i=0;i<4;i++){
+            const x=lo+7+((i*19+t*(3+i%3))%(hi-lo-14));
+            const y=7+i*5+Math.sin(t+i)*2;
+            ctx.fillStyle=['#ffac44','#69e2ee','#fa6ca1'][i%3];
+            ctx.beginPath();ctx.ellipse(x,y,5,3,0,0,2*Math.PI);ctx.fill();
+            ctx.beginPath();ctx.moveTo(x-4,y);ctx.lineTo(x-9,y-4);ctx.lineTo(x-9,y+4);ctx.fill();
+            circle(x+2,y-1,.8,'#101323');
+          }
+          for(let i=0;i<4;i++){
+            const x=lo+8+i*16,y=27-((t*5+i*7)%23);
+            ctx.strokeStyle='#52a8d6';ctx.strokeRect(x,y,2,2);
+          }
+        }
+      }else if(style==='pong'){
+        for(const [lo,hi] of sides){
+          const x=lo+6+Math.abs(Math.sin(t*.9))*(hi-lo-12),y=4+Math.abs(Math.cos(t*.68))*23;
+          line(lo+3,8+Math.sin(t)*6,lo+3,17+Math.sin(t)*6,a,2);
+          line(hi-4,8+Math.cos(t)*6,hi-4,17+Math.cos(t)*6,b,2);
+          ctx.fillStyle='#fff';ctx.fillRect(x,y,3,3);
+        }
+      }else if(style==='tetris'){
+        for(const [lo,hi] of sides)for(let i=0;i<8;i++){
+          const x=lo+5+(i*13)%(hi-lo-15), y=((t*(3+i%3)+i*9)%42)-10;
+          ctx.fillStyle=['#28cfee','#ffaf44','#ab68ff'][i%3];
+          for(const [dx,dy] of [[0,0],[1,0],[1,1],[2,1]])ctx.fillRect(x+dx*3,y+dy*3,3,3);
+        }
+      }else if(style==='moon'||style==='analog'||style==='bighour'){
+        for(const [lo,hi] of sides){
+          const x=(lo+hi)/2,y=16;
+          if(style==='moon'){circle(x,y,12,'#e6dfac');circle(x+7,y,12,'#050815');}
+          else{
+            ctx.strokeStyle=a;ctx.beginPath();ctx.arc(x,y,12,0,Math.PI*2);ctx.stroke();
+            if(style==='analog'){line(x,y,x+8*Math.sin(t*.08),y-8*Math.cos(t*.08),a,2);line(x,y,x+10*Math.sin(t*.025),y-10*Math.cos(t*.025),b);}
+            else{ctx.font='bold 11px monospace';ctx.textAlign='center';ctx.fillStyle=a;ctx.fillText(String(new Date().getHours()%12||12),x,19);}
+          }
+        }
+      }else if(style==='snow'||style==='lava'){
+        for(const [lo,hi] of sides)for(let i=0;i<22;i++){
+          const x=lo+((i*23+Math.sin(t+i)*3)%(hi-lo)),y=style==='snow'?(i*11+t*(2+i%4))%32:16+Math.sin(t*.5+i)*11;
+          if(style==='snow')circle(x,y,.8,'#c5e2ff');else circle(x,y,2+i%3,i%2?a:b);
+        }
+      }else if(style==='dayprogress'){
+        const now=new Date(),fraction=(now.getHours()*3600+now.getMinutes()*60+now.getSeconds())/86400;
+        for(const [lo,hi] of sides){ctx.strokeStyle=b;ctx.strokeRect(lo+4,13,hi-lo-8,6);ctx.fillStyle=a;ctx.fillRect(lo+5,14,(hi-lo-10)*fraction,4);}
+      }else if(style==='dotgrid'||style==='binary'){
+        for(const [lo,hi] of sides)for(let x=lo+3;x<hi-3;x+=5)for(let y=3;y<29;y+=5)
+          if((x*7+y*13+Math.floor(t))%6<3)circle(x,y,.9,a);
+      }else if(style==='world'||style==='words'){
+        for(let i=0;i<sides.length;i++){const [lo,hi]=sides[i];ctx.fillStyle=a;ctx.font='bold 9px monospace';ctx.textAlign='center';ctx.fillText(style==='words'?(i?'NOW':'IT IS'):new Date(Date.now()+[0,9][i]*3600000).toISOString().slice(11,16),(lo+hi)/2,18);}
+      }else if(['flap','morph','outline'].includes(style)){
+        for(const [lo,hi] of sides)for(let x=lo+4;x<hi-8;x+=17){ctx.strokeStyle=a;ctx.strokeRect(x,5,12,22);if(style==='flap')line(x,16,x+12,16,b);if(style==='morph')line(x,6,x+12,24,b);}
+      }
       const timezone=read('timezone','America/New_York');
       let n=new Date(),hour=n.getHours(),minute=n.getMinutes(),sec=n.getSeconds(),dateLabel='';
       try{
@@ -94,7 +166,7 @@
   if(window.LEDMatrixWidgets){
     window.LEDMatrixWidgets.register('chromaclock-live-preview',{
       name:'Live ChromaClock Preview',
-      version:'1.0.0',
+      version:'1.1.0',
       render:run,
       getValue:function(){return 'live';},
       setValue:function(){},
