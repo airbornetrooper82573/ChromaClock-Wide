@@ -7,7 +7,7 @@ import time
 from PIL import Image, ImageDraw, ImageFont
 from src.plugin_system.base_plugin import BasePlugin
 
-STYLES = ("neon", "prism", "starfield", "matrix", "fire", "horizon", "binary", "minimal", "pulse", "wave", "aurora", "rain")
+STYLES = ("neon", "prism", "starfield", "matrix", "fire", "horizon", "binary", "minimal", "pulse", "wave", "aurora", "rain", "flap", "morph", "outline", "words", "dotgrid", "moon", "dayprogress", "world", "pong", "tetris", "aquarium", "snow", "lava", "pacman", "analog", "bighour")
 PALETTES = {"cyan": ((35, 230, 255), (18, 70, 180)),
             "magenta": ((255, 65, 180), (115, 35, 205)),
             "amber": ((255, 185, 45), (170, 65, 25)),
@@ -118,6 +118,141 @@ class ChromaClockWidePlugin(BasePlugin):
                     y = int((tick * 12 + x * 17) % (h + 12)) - 6
                     draw.line((x, max(0, y), x, min(h - 1, y + 5)), fill=scale(accent, .65))
 
+    def _original_style(self, draw, w, h, style, tick, now, accent, secondary):
+        """Wide-screen interpretations of ChromaClock's remaining scene styles."""
+        if style not in ['flap','morph','outline','words','dotgrid','moon','dayprogress','world','pong','tetris','aquarium','snow','lava','pacman','analog','bighour']:
+            return
+        # Scenic styles use side regions; the center remains available to the time.
+        side = max(12, int((w - min(150, w * .5)) / 2))
+        regions = [(0, side), (w - side, w)]
+        if style == "aquarium":
+            draw.line((0, h - 3, w, h - 3), fill=(40, 95, 130))
+            for start, end in regions:
+                for i in range(6):
+                    fx = start + ((i * 37 + int(tick * (4 + i % 3))) % max(1, end - start))
+                    fy = 6 + (i * 7) % max(7, h - 13)
+                    direction = 1 if i % 2 else -1
+                    col = [(255, 170, 60), (80, 235, 240), (255, 100, 160)][i % 3]
+                    draw.ellipse((fx - 4, fy - 2, fx + 4, fy + 2), fill=col)
+                    draw.polygon([(fx - 3 * direction, fy), (fx - 7 * direction, fy - 3), (fx - 7 * direction, fy + 3)], fill=col)
+                    draw.point((fx + 2 * direction, fy - 1), fill=(0, 0, 0))
+                for i in range(4):
+                    bx = start + 9 + i * max(1, (end - start - 15) // 4)
+                    by = h - 6 - ((int(tick * 5) + i * 13) % max(8, h - 8))
+                    draw.ellipse((bx, by, bx + 2, by + 2), outline=(60, 140, 210))
+        elif style == "pacman":
+            for start, end in regions:
+                cy = h // 2
+                for x in range(start + 5, end - 3, 11):
+                    draw.point((x, cy), fill=(245, 210, 80))
+                span = max(1, end - start - 18)
+                px = start + 8 + int(tick * 8) % span
+                opening = abs(math.sin(tick * 8)) * .8
+                # The wedge visibly animates while avoiding anti-aliased sprite scaling.
+                draw.pieslice((px - 6, cy - 6, px + 6, cy + 6),
+                              start=int(30 + opening * 38), end=int(330 - opening * 38),
+                              fill=(255, 225, 35))
+                gx = start + 8 + int(tick * 5 + span // 2) % span
+                ghost = (255, 65, 95) if start == 0 else (85, 245, 255)
+                draw.rectangle((gx - 4, cy - 1, gx + 4, cy + 5), fill=ghost)
+                draw.pieslice((gx - 4, cy - 6, gx + 4, cy + 3), 180, 360, fill=ghost)
+                draw.point((gx - 2, cy), fill=(255, 255, 255))
+                draw.point((gx + 2, cy), fill=(255, 255, 255))
+        elif style in ("analog", "bighour"):
+            for start, end in regions:
+                cx = (start + end) // 2
+                cy = h // 2
+                radius = min(h // 2 - 2, (end - start) // 2 - 3)
+                if radius < 3:
+                    continue
+                draw.ellipse((cx - radius, cy - radius, cx + radius, cy + radius), outline=accent)
+                if style == "bighour":
+                    hour = str(now.hour % 12 or 12)
+                    draw.text((cx - 4 * len(hour), cy - 5), hour, fill=accent, font=get_font(9))
+                else:
+                    ha = 2 * math.pi * ((now.hour % 12 + now.minute / 60) / 12) - math.pi / 2
+                    ma = 2 * math.pi * ((now.minute + now.second / 60) / 60) - math.pi / 2
+                    draw.line((cx, cy, cx + int(math.cos(ha) * radius * .55), cy + int(math.sin(ha) * radius * .55)), fill=accent, width=2)
+                    draw.line((cx, cy, cx + int(math.cos(ma) * radius * .8), cy + int(math.sin(ma) * radius * .8)), fill=secondary)
+        elif style == "pong":
+            for start, end in regions:
+                cy = h // 2
+                ballx = start + 4 + int(abs(math.sin(tick * .75)) * max(1, end - start - 10))
+                bally = 4 + int(abs(math.sin(tick * .53)) * max(1, h - 10))
+                draw.line((start + 2, cy - 5 + int(math.sin(tick) * 7), start + 2, cy + 2 + int(math.sin(tick) * 7)), fill=accent, width=2)
+                draw.line((end - 3, cy - 5 + int(math.cos(tick) * 7), end - 3, cy + 2 + int(math.cos(tick) * 7)), fill=secondary, width=2)
+                draw.rectangle((ballx, bally, ballx + 2, bally + 2), fill=(255, 255, 255))
+        elif style == "tetris":
+            blocks = [[(0,0),(1,0),(0,1),(1,1)],[(0,0),(0,1),(0,2),(1,2)],[(0,0),(1,0),(2,0),(1,1)]]
+            for start, end in regions:
+                for i in range(8):
+                    shape = blocks[i % len(blocks)]
+                    px = start + 5 + (i * 17) % max(1, end - start - 16)
+                    py = int((tick * (3 + i % 3) + i * 7) % (h + 14)) - 10
+                    color = [(70, 215, 255),(250, 190, 60),(190, 100, 250)][i % 3]
+                    for dx, dy in shape:
+                        draw.rectangle((px + dx * 3, py + dy * 3, px + dx * 3 + 2, py + dy * 3 + 2), fill=color)
+        elif style == "moon":
+            for start, end in regions:
+                cx = (start + end)//2
+                cy = h//2
+                radius = max(4, min(h//2 - 3, (end-start)//3))
+                draw.ellipse((cx-radius, cy-radius, cx+radius, cy+radius), fill=(225,225,185))
+                phase = (now.day % 29)/29
+                shadow = int(radius * (.4 + phase))
+                draw.ellipse((cx-radius+shadow,cy-radius,cx+radius+shadow,cy+radius),fill=(7,12,33))
+                for i in range(7):
+                    x = start+(i*31+5)%max(1,end-start)
+                    y = (i*11+4)%h
+                    draw.point((x,y),fill=secondary)
+        elif style == "snow":
+            for start,end in regions:
+                for i in range(34):
+                    x=start+(i*37+int(math.sin(tick+i)*3))%max(1,end-start)
+                    y=(i*13+int(tick*(2+i%4)))%h
+                    draw.point((x,y),fill=(180,215,255))
+                draw.line((start,h-2,end,h-2),fill=(90,150,200))
+        elif style == "lava":
+            for start,end in regions:
+                for i in range(9):
+                    x=start+((i*27+8)%max(1,end-start))
+                    y=3+int((.5+.5*math.sin(tick*.6+i*1.7))*(h-12))
+                    r=2+i%3
+                    draw.ellipse((x-r,y-r,x+r,y+r),fill=blend(accent,secondary,i/9))
+        elif style == "dayprogress":
+            pct=(now.hour*3600+now.minute*60+now.second)/86400
+            for start,end in regions:
+                draw.rectangle((start+4,h//2-3,end-4,h//2+3),outline=secondary)
+                fill_end=start+4+int(max(0,end-start-9)*pct)
+                draw.rectangle((start+5,h//2-2,fill_end,h//2+2),fill=accent)
+        elif style == "world":
+            offsets=(-5,0,9,1)
+            for idx,(start,end) in enumerate(regions):
+                localhour=(now.hour+offsets[idx])%24
+                draw.text((start+8,h//2-5),("%02d:%02d"%(localhour,now.minute)),fill=accent,font=get_font(9))
+        elif style == "dotgrid":
+            for start,end in regions:
+                for x in range(start+3,end-2,5):
+                    for y in range(3,h-2,5):
+                        if (x*7+y*13+now.second)%6<3:
+                            draw.point((x,y),fill=accent)
+        elif style == "words":
+            words=("IT IS", "NOW")
+            for idx,(start,end) in enumerate(regions):
+                draw.text((start+5,h//2-5),words[idx],fill=accent,font=get_font(9))
+        elif style in ("flap","morph","outline"):
+            for start,end in regions:
+                if style=="flap":
+                    for x in range(start+5,end-3,18):
+                        draw.rectangle((x,4,x+13,h-5),outline=accent)
+                        draw.line((x, h//2,x+13,h//2),fill=secondary)
+                elif style=="morph":
+                    for x in range(start+5,end-4,14):
+                        height=int(3+abs(math.sin(tick*1.6+x))*(h-8))
+                        draw.rectangle((x,h-height,x+8,h-4),outline=accent)
+                else:
+                    draw.rectangle((start+4,4,end-5,h-5),outline=accent)
+
     def display(self, force_clear=False):
         try:
             w, h = int(self.display_manager.width), int(self.display_manager.height)
@@ -141,6 +276,7 @@ class ChromaClockWidePlugin(BasePlugin):
             img = Image.new("RGB", (w, h))
             draw = ImageDraw.Draw(img)
             self._decor(draw, w, h, self.current_style, tick, a, b)
+            self._original_style(draw, w, h, self.current_style, tick, now, a, b)
             text = now.strftime("%H:%M" if self.use_24h else "%I:%M")
             if not self.use_24h:
                 text = text.lstrip("0") or "12:00"
