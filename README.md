@@ -2,7 +2,7 @@
 
 Native-width ChromaClock-inspired animations for **ChuckBuilds LEDMatrix** and wide, chained RGB panels. Developed for five 64×32 P5 panels in a row (**320×32**), but reads the display dimensions from LEDMatrix rather than hard-coding them.
 
-Inspired by [alejoar's ChromaClock](https://github.com/tronbyt/apps/tree/main/apps/chromaclock). This **does not contain the original 23 styles or Starlark source**: it independently implements 12 wide-friendly styles.
+Inspired by [alejoar's ChromaClock](https://github.com/tronbyt/apps/tree/main/apps/chromaclock). This **does not contain the original 23 styles or Starlark source**: it independently implements 28 wide-friendly styles.
 
 ## Live integrated web preview
 
@@ -11,7 +11,7 @@ On LEDMatrix releases supporting plugin-supplied custom widgets, the **Live LEDM
 ## Features
 
 - Native-width clock drawing; no stretched 64×32 bitmap.
-- 12 styles: neon, prism, starfield, matrix, fire, horizon, binary, minimal, pulse, wave, aurora, rain.
+- 28 styles: neon, prism, starfield, matrix, fire, horizon, binary, minimal, pulse, wave, aurora, rain.
 - **Cycle** mode changes styles every configurable number of seconds (default 20).
 - **Preview Mode** pins the configured **Preview Style** to the *physical display* while you edit settings. Disable Preview Mode to resume normal style cycling. **This is not an embedded live preview in the LEDMatrix browser UI.**
 - Date, seconds, progress bar, timezone, 12/24-hour setting, brightness, palette and glow.
@@ -38,3 +38,7 @@ LEDMatrix must already be configured with your physical 5-panel chain. The plugi
 
 - [Tronbyt ChromaClock](https://github.com/tronbyt/apps/tree/main/apps/chromaclock)
 - [ChuckBuilds LEDMatrix](https://github.com/ChuckBuilds/LEDMatrix)
+
+## Additional ChromaClock-inspired styles (v1.3.0)
+
+Added 16 native-width interpretations: **Pac-Man, Aquarium, Pong, Tetris, Moon, Snow, Lava lamp, Analog, Big hour, Split-flap, Morph, Outline, Words, Dot grid, Day progress and World clocks**. These are visually inspired wide adaptations, not exact pixel-for-pixel ports of the upstream Starlark animations. Available in both Style and Preview Style dropdowns, and in automatic cycle mode. Their animations depend on LEDMatrix's display refresh behavior.
