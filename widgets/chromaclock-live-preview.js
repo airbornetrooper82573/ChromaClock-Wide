@@ -87,16 +87,16 @@
           for(let x=lo+6;x<hi-3;x+=8)
             if(Math.abs(x-px)>7)circle(x,mid,1.15,'#f7c994');
           ctx.fillStyle='#ffe21c';ctx.beginPath();ctx.moveTo(px,mid);
-          ctx.arc(px,mid,6,mouth,Math.PI*2-mouth,false);ctx.closePath();ctx.fill();
+          ctx.arc(px,mid,5,mouth,Math.PI*2-mouth,false);ctx.closePath();ctx.fill();
           for(let i=0;i<2;i++){
             const gx=lo+10+((t*(5+i)+i*29+sideIndex*17)%(width-20));
-            const gy=i===0?9:23;
+            const gy=i===0?6:26;
             const gc=['#fa404d','#ffabd5','#4afaff','#ffaf35'][(sideIndex*2+i)%4];
             ctx.fillStyle=gc;
             ctx.beginPath();ctx.moveTo(gx-5,gy+5);ctx.lineTo(gx-5,gy);
-            ctx.arc(gx,gy,5,Math.PI,0,false);
-            ctx.lineTo(gx+5,gy+5);
-            for(let z=4;z>=0;z--)ctx.lineTo(gx-5+z*2.5,gy+5+(z%2?0:-2));
+            ctx.arc(gx,gy,4,Math.PI,0,false);
+            ctx.lineTo(gx+4,gy+3);
+            for(let z=4;z>=0;z--)ctx.lineTo(gx-4+z*2,gy+3+(z%2?0:-1));
             ctx.closePath();ctx.fill();
             ctx.fillStyle='#fff';ctx.fillRect(gx-3,gy-1,3,3);ctx.fillRect(gx+1,gy-1,3,3);
             ctx.fillStyle='#153ddf';ctx.fillRect(gx-2,gy,1,2);ctx.fillRect(gx+2,gy,1,2);
@@ -188,7 +188,7 @@
   if(window.LEDMatrixWidgets){
     window.LEDMatrixWidgets.register('chromaclock-live-preview',{
       name:'Live ChromaClock Preview',
-      version:'1.2.0',
+      version:'1.3.0',
       render:run,
       getValue:function(){return 'live';},
       setValue:function(){},
