@@ -42,3 +42,7 @@ LEDMatrix must already be configured with your physical 5-panel chain. The plugi
 ## Additional ChromaClock-inspired styles (v1.3.0)
 
 Added 16 native-width interpretations: **Pac-Man, Aquarium, Pong, Tetris, Moon, Snow, Lava lamp, Analog, Big hour, Split-flap, Morph, Outline, Words, Dot grid, Day progress and World clocks**. These are visually inspired wide adaptations, not exact pixel-for-pixel ports of the upstream Starlark animations. Available in both Style and Preview Style dropdowns, and in automatic cycle mode. Their animations depend on LEDMatrix's display refresh behavior.
+
+## v1.3.2 — Preview selection and Pac-Man
+
+When **Preview Mode** is on, **Preview Style** selects the browser preview immediately, and selects the physical panel after Save. When Preview Mode is off, the **Style** selector (including Cycle) drives both. Pac-Man now features blue arcade maze walls, pellets, a chomping yellow character and colored ghosts with eyes on both side bays. After updating, reload the web page with a cache-bypassing refresh to replace the older widget script.
