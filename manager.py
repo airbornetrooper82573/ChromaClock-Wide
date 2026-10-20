@@ -141,23 +141,40 @@ class ChromaClockWidePlugin(BasePlugin):
                     by = h - 6 - ((int(tick * 5) + i * 13) % max(8, h - 8))
                     draw.ellipse((bx, by, bx + 2, by + 2), outline=(60, 140, 210))
         elif style == "pacman":
-            for start, end in regions:
+            for index, (start, end) in enumerate(regions):
                 cy = h // 2
-                for x in range(start + 5, end - 3, 11):
-                    draw.point((x, cy), fill=(245, 210, 80))
-                span = max(1, end - start - 18)
-                px = start + 8 + int(tick * 8) % span
-                opening = abs(math.sin(tick * 8)) * .8
-                # The wedge visibly animates while avoiding anti-aliased sprite scaling.
+                blue = (26, 68, 250)
+                # Arcade-style maze walls with pellet corridors.
+                draw.rectangle((start + 1, 1, end - 2, h - 2), outline=blue, width=2)
+                draw.rectangle((start + 8, 5, start + 25, 12), outline=blue)
+                draw.rectangle((end - 27, h - 12, end - 9, h - 5), outline=blue)
+                draw.line((start + 33, 2, start + 33, 10), fill=blue, width=2)
+                draw.line((end - 34, h - 10, end - 34, h - 2), fill=blue, width=2)
+                span = max(1, end - start - 16)
+                px = start + 8 + int(tick * 12 + index * 23) % span
+                for x in range(start + 6, end - 3, 8):
+                    if abs(x - px) > 7:
+                        draw.ellipse((x - 1, cy - 1, x + 1, cy + 1), fill=(245, 198, 140))
+                # Mouth animated as a small triangular cut-out.
+                opening = 8 + int(abs(math.sin(tick * 7)) * 35)
                 draw.pieslice((px - 6, cy - 6, px + 6, cy + 6),
-                              start=int(30 + opening * 38), end=int(330 - opening * 38),
-                              fill=(255, 225, 35))
-                gx = start + 8 + int(tick * 5 + span // 2) % span
-                ghost = (255, 65, 95) if start == 0 else (85, 245, 255)
-                draw.rectangle((gx - 4, cy - 1, gx + 4, cy + 5), fill=ghost)
-                draw.pieslice((gx - 4, cy - 6, gx + 4, cy + 3), 180, 360, fill=ghost)
-                draw.point((gx - 2, cy), fill=(255, 255, 255))
-                draw.point((gx + 2, cy), fill=(255, 255, 255))
+                              start=opening, end=360-opening, fill=(255, 222, 24))
+                colors = ((250, 55, 70), (255, 175, 210),
+                          (70, 240, 255), (255, 170, 45))
+                for i in range(2):
+                    gx = start + 10 + int(tick * (5+i) + i*29 + index*17) % max(1,end-start-20)
+                    gy = 9 if i == 0 else h-9
+                    gc = colors[index*2+i]
+                    # Rounded ghost head and zigzag fringe.
+                    draw.ellipse((gx-5,gy-5,gx+5,gy+5), fill=gc)
+                    draw.rectangle((gx-5,gy,gx+5,gy+4),fill=gc)
+                    for z in range(3):
+                        xx=gx-5+z*4
+                        draw.polygon(((xx,gy+4),(xx+2,gy+6),(xx+4,gy+4)), fill=gc)
+                    draw.rectangle((gx-3,gy-1,gx-1,gy+1),fill=(255,255,255))
+                    draw.rectangle((gx+1,gy-1,gx+3,gy+1),fill=(255,255,255))
+                    draw.point((gx-2,gy),fill=(15,55,220))
+                    draw.point((gx+2,gy),fill=(15,55,220))
         elif style in ("analog", "bighour"):
             for start, end in regions:
                 cx = (start + end) // 2
