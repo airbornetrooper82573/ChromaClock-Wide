@@ -4,6 +4,10 @@ Native-width ChromaClock-inspired animations for **ChuckBuilds LEDMatrix** and w
 
 Inspired by [alejoar's ChromaClock](https://github.com/tronbyt/apps/tree/main/apps/chromaclock). This **does not contain the original 23 styles or Starlark source**: it independently implements 12 wide-friendly styles.
 
+## Live integrated web preview
+
+On LEDMatrix releases supporting plugin-supplied custom widgets, the **Live LEDMatrix Preview** appears inside the ChromaClock Wide configuration tab. The 320×32 browser canvas updates as you change form controls, **before saving**. The canvas tracks time and style-cycle transitions automatically. This browser-based drawing is an approximation of the Python/Pillow output (not a physical LED feed). The preview operates entirely in your browser and **does not require changes to LEDMatrix core**. A page refresh may be needed after upgrading the plugin.
+
 ## Features
 
 - Native-width clock drawing; no stretched 64×32 bitmap.
