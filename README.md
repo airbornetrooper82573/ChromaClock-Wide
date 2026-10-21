@@ -46,3 +46,7 @@ Added 16 native-width interpretations: **Pac-Man, Aquarium, Pong, Tetris, Moon, 
 ## v1.3.2 — Preview selection and Pac-Man
 
 When **Preview Mode** is on, **Preview Style** selects the browser preview immediately, and selects the physical panel after Save. When Preview Mode is off, the **Style** selector (including Cycle) drives both. Pac-Man now features blue arcade maze walls, pellets, a chomping yellow character and colored ghosts with eyes on both side bays. After updating, reload the web page with a cache-bypassing refresh to replace the older widget script.
+
+## v1.4.0 — Full-width transparent clock overlay
+
+All clock styles now draw their animation across the entire matrix width instead of reserving blank left/right bays. The time remains centered and is rendered on top of the scene, with only a one-pixel dark glyph outline for contrast and no solid text background or bounding box. The browser preview uses the same full-width layout. Pac-Man can travel behind clock glyphs; ghosts remain in their own vertical lanes. The clock characters themselves mask the pixels immediately underneath them, as normal foreground drawing.
