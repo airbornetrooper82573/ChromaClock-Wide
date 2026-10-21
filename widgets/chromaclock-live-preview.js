@@ -51,7 +51,6 @@
       const brightness=Math.max(.15,Math.min(1,Number(read('brightness',.85))||.85));
       const ctx=context;ctx.clearRect(0,0,w,h);ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);
       for(let x=0;x<w;x++){
-        if(Math.abs(x-w/2)<70)continue;
         const wave=Math.sin(x*.08+t);
         ctx.fillStyle=style==='matrix'?'#23ba60':style==='fire'?'#ff7721':style==='aurora'?'#42efa7':style==='prism'?color(x*1.1+t*9):a;
         ctx.globalAlpha=.55*brightness;
@@ -70,7 +69,8 @@
       // repeated in the per-pixel background loop.
       function line(x,y,x2,y2,color,width=1){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x2,y2);ctx.stroke();}
       function circle(x,y,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}
-      const sides=[[0,76],[244,320]];
+      // Full-canvas animation: clock glyphs are painted after the backdrop.
+      const sides=[[0,w]];
       if(style==='pacman'){
         // Mini arcade maze in both side bays; cyan double walls, lit pellets,
         // animated Pac-Man, four recognizable ghost colors and white eyes.
@@ -174,10 +174,12 @@
       while(ctx.measureText(text).width>maxW&&size>8){size--;ctx.font='bold '+size+'px monospace';}
       ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=a;
       if(read('glow',true)){ctx.globalAlpha=.25;ctx.fillText(text,161,dateOn?12:16);ctx.fillText(text,159,dateOn?12:16);ctx.globalAlpha=1;}
+      // Crisp dark glyph stroke improves readability without boxing out the scene.
+      ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.strokeText(text,160,dateOn?12:16);
       ctx.fillText(text,160,dateOn?12:16);
       if(secOn){ctx.font='bold 8px monospace';ctx.fillStyle=b;ctx.fillText(String(sec).padStart(2,'0'),230,8);ctx.fillStyle=a;ctx.fillRect(0,31,Math.floor(w*sec/60),1);}
       if(dateOn){ctx.font='bold 7px monospace';ctx.fillStyle='#cdd5e6';ctx.fillText(dateLabel,160,27);}
-      status.textContent='Previewing: '+style+' · '+w+'×'+h+' · '+(h24?'24h':'12h')+' · '+timezone;
+      status.textContent='Full-width background · Previewing: '+style+' · '+w+'×'+h+' · '+(h24?'24h':'12h')+' · '+timezone;
       ctx.globalAlpha=1;
     }
     let timer=setInterval(()=>{if(!container.isConnected){clearInterval(timer);return;} draw();},250);
@@ -188,7 +190,7 @@
   if(window.LEDMatrixWidgets){
     window.LEDMatrixWidgets.register('chromaclock-live-preview',{
       name:'Live ChromaClock Preview',
-      version:'1.3.0',
+      version:'1.4.0',
       render:run,
       getValue:function(){return 'live';},
       setValue:function(){},
