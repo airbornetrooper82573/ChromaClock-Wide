@@ -68,9 +68,6 @@ class ChromaClockWidePlugin(BasePlugin):
 
     def _decor(self, draw, w, h, style, tick, accent, secondary):
         for x in range(w):
-            # Reserve central space for clear clock text.
-            if abs(x - w / 2) < min(70, w * .25):
-                continue
             wave = math.sin(x * .08 + tick)
             if style == "neon":
                 draw.point((x, 1), fill=scale(blend(accent, secondary, (wave + 1) / 2), .65))
@@ -122,9 +119,8 @@ class ChromaClockWidePlugin(BasePlugin):
         """Wide-screen interpretations of ChromaClock's remaining scene styles."""
         if style not in ['flap','morph','outline','words','dotgrid','moon','dayprogress','world','pong','tetris','aquarium','snow','lava','pacman','analog','bighour']:
             return
-        # Scenic styles use side regions; the center remains available to the time.
-        side = max(12, int((w - min(150, w * .5)) / 2))
-        regions = [(0, side), (w - side, w)]
+        # One continuous backdrop; the foreground clock is rendered last.
+        regions = [(0, w)]
         if style == "aquarium":
             draw.line((0, h - 3, w, h - 3), fill=(40, 95, 130))
             for start, end in regions:
@@ -311,7 +307,8 @@ class ChromaClockWidePlugin(BasePlugin):
             if self.glow:
                 for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
                     draw.text((x + dx, y + dy), text, font=face, fill=scale(b, .30))
-            draw.text((x, y), text, font=face, fill=a)
+            draw.text((x, y), text, font=face, fill=a,
+                      stroke_width=1, stroke_fill=(0, 0, 0))
             if self.show_seconds:
                 secface = get_font(max(8, min(11, h // 3)))
                 sx = min(w - 16, x + bounds[2] - bounds[0] + 6)
